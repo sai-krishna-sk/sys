@@ -1,0 +1,254 @@
+1 . static
+
+/* Filename: lib_mylib.c */
+#include <stdio.h>
+void fun(void)
+{
+printf("fun() called from a static library");
+}
+
+/* Ffilename: lib_mylib.h */
+void fun(void);
+
+gcc -c lib_mylib.c -o lib_mylib.o
+
+ar rcs lib_mylib.a lib_mylib.o
+
+create a main c file 
+
+gcc -c driver.c -o driver.o
+
+gcc -o driver driver.o -L. -l:lib_mylib.a
+
+./driver
+
+
+
+dynamic:
+
+nano add.c
+nano sub.c
+nano lib.h
+nano main.c
+
+gcc -c add.c sub.c -fpic
+
+gcc *.o -shared -o lib.so
+
+gcc -c main.c -o main.o
+
+gcc -o main main.o -L. -l:lib.so
+
+Sudo cp lib.so/USR/lib
+
+2 . dac linux
+
+chmod u+x sample.c
+
+changing owner of the file 
+sudo chown pranish sample.c
+
+changing group of a file 
+chgrp rocky sample.c
+
+changing file’s owner and group at the same time
+sudo chown pranish:rocky sample.c
+
+
+
+
+3 . dac sql
+
+sudo mysql
+
+use mysql;
+select user from user;
+
+CREATE USER 'ram'@'localhost' IDENTIFIED BY 'password';
+
+GRANT CREATE, ALTER, DROP, INSERT, UPDATE, INDEX, DELETE, SELECT, 
+REFERENCES, RELOAD on *.* TO 'ram'@'localhost' WITH GRANT OPTION;
+
+GRANT ALL PRIVILEGES ON *.* TO 'ram'@'localhost' WITH GRANT OPTION;
+
+SHOW GRANTS FOR username@hostname;
+
+mysql -u ram -p
+
+REVOKE UPDATE, INSERT ON mystudentdb.*FROM john@localhost;
+
+CREATE ROLE 'PRANISH';
+
+GRANT SELECT ON *.* TO 'PRANISH';
+
+CREATE USER 'ram'@'host' IDENTIFIED BY 'prani';
+
+GRANT PRANISH ON *.* TO 
+
+
+
+
+4. chroot
+
+chr=/home/dave/testroot
+
+mkdir -p $chr
+
+mkdir -p $chr/{bin,lib,lib64}
+
+cd $chr
+
+cp -v /bin/{bash,touch,ls,rm} $chr/bin
+
+ldd /bin/bash
+
+list="$(ldd /bin/bash | egrep -o '/lib.*\.[0-9]')"
+
+echo $list
+
+for i in $list; do cp -v --parents "$i" "${chr}"; done
+
+list="$(ldd /bin/touch | egrep -o '/lib.*\.[0-9]')"
+
+for i in $list; do cp -v --parents "$i" "${chr}"; done
+
+sudo chroot $chr /bin/bash
+
+ls
+
+ls /home/dave/Documents
+
+touch sample_file.txt
+
+ls
+
+rm sample_file.txt
+
+ls
+
+
+
+5. apparmor
+
+systemctl status apparmor 
+
+systemctl start apparmor
+
+systemctl enable apparmor
+
+sudo aa-status  
+
+sudo nano etc/default/grub
+quick apparmor=1
+update-grub
+reboot 
+
+(create a file in a folder)
+
+#!/bin/bash 
+ 
+echo "This is an apparmor example." 
+ 
+touch sample.txt 
+echo "File created" 
+ 
+rm sample.txt 
+echo "File deleted"
+
+sudo aa-genprof example.sh
+
+./example.sh
+
+scan (s)
+inherit (I)
+Allow (A)
+
+Finish (F)
+
+sudo aa-status
+
+(the file should be there in the enforce mode)
+
+
+
+
+6 . row level 
+
+CREATE TABLE books (
+  id           int AUTO_INCREMENT NOT NULL,
+  title        varchar(80),
+  author       varchar(20),
+  cover        blob,
+  description  text,
+  owner        varchar(30), -- to store book's owner
+  /* Keys */
+  PRIMARY KEY (id)
+);
+
+CREATE VIEW user_books(
+  title,
+  author,
+  cover,
+  descrition
+)
+AS
+select 
+  books.title AS title,
+  books.author AS author,
+  books.cover AS cover,
+  books.description AS descrition 
+from books 
+where
+  (books.owner = substring_index(user(), '@', 1));
+
+SELECT SUBSTRING_INDEX('john@localhost', '@', 1);
+
+GRANT SELECT, INSERT, UPDATE, DELETE, 
+  ON TABLE user_books
+TO 'john'@'%';
+
+GRANT SELECT, INSERT, UPDATE, DELETE, 
+  ON TABLE user_books
+TO 'mary'@'%';
+
+DELIMITER |
+ 
+CREATE TRIGGER tr_books_before_insert
+  BEFORE INSERT
+  ON books
+  FOR EACH ROW
+BEGIN
+    SET NEW.owner = substring_index(user(), '@', 1);
+END|
+ 
+DELIMITER ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
